@@ -1,18 +1,17 @@
 import streamlit as st
 import numpy as np
 import joblib
+import plotly.graph_objects as go
+import pandas as pd
 
 # Load model and scaler
-model = joblib.load("models/burnout_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
+model = joblib.load("burnout_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
-# -------------------------------
-# PAGE CONFIG
-# -------------------------------
 st.set_page_config(page_title="CogniBurn", layout="centered")
 
 # -------------------------------
-# CUSTOM CSS (UI MAGIC 🔥)
+# CUSTOM CSS
 # -------------------------------
 st.markdown("""
 <style>
@@ -21,15 +20,8 @@ body {
     color: white;
 }
 
-.main {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    padding: 20px;
-    border-radius: 15px;
-}
-
 h1 {
     text-align: center;
-    font-weight: 700;
 }
 
 .stButton>button {
@@ -38,11 +30,6 @@ h1 {
     border-radius: 10px;
     height: 3em;
     width: 100%;
-    font-size: 16px;
-}
-
-.stButton>button:hover {
-    background-color: #4f46e5;
 }
 
 .result-box {
@@ -54,17 +41,9 @@ h1 {
     margin-top: 20px;
 }
 
-.low {
-    background-color: #16a34a;
-}
-
-.medium {
-    background-color: #f59e0b;
-}
-
-.high {
-    background-color: #dc2626;
-}
+.low { background-color: #16a34a; }
+.medium { background-color: #f59e0b; }
+.high { background-color: #dc2626; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -77,26 +56,13 @@ st.markdown("<p style='text-align:center;'>AI-Based Burnout Detection System</p>
 st.markdown("---")
 
 # -------------------------------
-# MAPPING FUNCTIONS
+# MAPPINGS
 # -------------------------------
-level_map = {
-    "Very Low": 0.0,
-    "Low": 0.25,
-    "Neutral": 0.5,
-    "High": 0.75,
-    "Very High": 1.0
-}
-
-quality_map = {
-    "Awful": 0.0,
-    "Bad": 0.25,
-    "Medium": 0.5,
-    "Good": 0.75,
-    "Excellent": 1.0
-}
+level_map = {"Very Low": 0.0, "Low": 0.25, "Neutral": 0.5, "High": 0.75, "Very High": 1.0}
+quality_map = {"Awful": 0.0, "Bad": 0.25, "Medium": 0.5, "Good": 0.75, "Excellent": 1.0}
 
 # -------------------------------
-# INPUT SECTION
+# INPUTS
 # -------------------------------
 st.subheader("📊 Lifestyle Inputs")
 
@@ -111,9 +77,6 @@ with col2:
     social_media_usage = st.number_input("Social Media (hrs/day)", 0.0, 10.0, 2.0)
     screen_time = social_media_usage
 
-# -------------------------------
-# QUALITY INPUTS
-# -------------------------------
 st.subheader("😴 Health & Quality")
 
 col1, col2 = st.columns(2)
@@ -124,12 +87,9 @@ with col1:
 
 with col2:
     study_load = st.selectbox("Study Load", list(level_map.keys()))
-    extracurricular_freq = 0.5  # default
+    extracurricular_freq = 0.5
 
-# -------------------------------
-# MENTAL STATE
-# -------------------------------
-st.subheader("🧠 Mental & Behavioral State")
+st.subheader("🧠 Mental State")
 
 col1, col2 = st.columns(2)
 
@@ -146,10 +106,10 @@ with col2:
 # -------------------------------
 # NORMALIZATION
 # -------------------------------
-study_time = study_time / 12
-social_media_usage = social_media_usage / 10
-sleep_hours = sleep_hours / 12
-physical_activity = physical_activity / 20
+study_time /= 12
+social_media_usage /= 10
+sleep_hours /= 12
+physical_activity /= 20
 
 sleep_quality = quality_map[sleep_quality]
 headache_freq = quality_map[headache_freq]
@@ -163,7 +123,7 @@ performance_pressure = level_map[performance_pressure]
 lifestyle_stress = level_map[lifestyle_stress]
 
 # -------------------------------
-# PREDICTION
+# PREDICT
 # -------------------------------
 if st.button("🔍 Predict Burnout Level"):
 
@@ -175,13 +135,16 @@ if st.button("🔍 Predict Burnout Level"):
                             lifestyle_stress]])
 
     input_scaled = scaler.transform(input_data)
-    prediction = model.predict(input_scaled)[0]
+
+    probs = model.predict_proba(input_scaled)[0]
+    prediction = np.argmax(probs)
+    confidence = np.max(probs) * 100
 
     levels = {0: "Low", 1: "Medium", 2: "High"}
     result = levels[prediction]
 
     # -------------------------------
-    # RESULT DISPLAY
+    # RESULT BOX
     # -------------------------------
     if result == "Low":
         st.markdown("<div class='result-box low'>✅ Low Burnout</div>", unsafe_allow_html=True)
@@ -191,16 +154,71 @@ if st.button("🔍 Predict Burnout Level"):
         st.markdown("<div class='result-box high'>🔥 High Burnout</div>", unsafe_allow_html=True)
 
     # -------------------------------
-    # RECOMMENDATIONS
+    # GAUGE CHART
     # -------------------------------
-    st.markdown("### 💡 Recommendations")
+    st.markdown("### 📊 Burnout Risk Score")
 
-    if result == "High":
-        st.error("Reduce workload, improve sleep, and take regular breaks.")
-    elif result == "Medium":
-        st.warning("Maintain balance and monitor stress.")
-    else:
-        st.success("Keep up your healthy routine!")
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=confidence,
+        title={'text': "Risk %"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "white"},
+            'steps': [
+                {'range': [0, 30], 'color': "#16a34a"},
+                {'range': [30, 70], 'color': "#f59e0b"},
+                {'range': [70, 100], 'color': "#dc2626"}
+            ],
+        }
+    ))
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # -------------------------------
+    # FEATURE IMPORTANCE
+    # -------------------------------
+    importance = np.mean(np.abs(model.coef_), axis=0)
+
+    features = [
+        "Study Time", "Social Media", "Sleep Quality", "Headache",
+        "Study Load", "Extracurricular", "Screen Time", "Sleep Hours",
+        "Physical Activity", "Exam Anxiety", "Stress", "Mental Strain",
+        "Recovery", "Performance Pressure", "Lifestyle Stress"
+    ]
+
+    df_imp = pd.DataFrame({"Feature": features, "Importance": importance})
+    st.markdown("### 📈 Feature Importance")
+    st.bar_chart(df_imp.set_index("Feature"))
+
+    # -------------------------------
+    # INPUT VISUALIZATION
+    # -------------------------------
+    st.markdown("### 🧾 Your Input Summary")
+
+    input_df = pd.DataFrame({
+        "Feature": features,
+        "Value": input_data.flatten()
+    })
+
+    st.bar_chart(input_df.set_index("Feature"))
+
+    # -------------------------------
+    # SMART RECOMMENDATIONS
+    # -------------------------------
+    st.markdown("### 🎯 Personalized Insights")
+
+    if stress_level > 0.7:
+        st.warning("High stress detected → Try relaxation techniques")
+
+    if sleep_hours < 0.4:
+        st.warning("Low sleep → Increase rest duration")
+
+    if social_media_usage > 0.6:
+        st.warning("High screen time → Reduce digital exposure")
+
+    if result == "Low":
+        st.success("Great balance! Keep it up 🎉")
 
 # -------------------------------
 # FOOTER
