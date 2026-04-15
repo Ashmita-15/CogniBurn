@@ -5,8 +5,8 @@ import plotly.graph_objects as go
 import pandas as pd
 
 # Load model and scaler
-model = joblib.load("burnout_model.pkl")
-scaler = joblib.load("scaler.pkl")
+model = joblib.load("models/burnout_model.pkl")
+scaler = joblib.load("models/scaler.pkl")
 
 st.set_page_config(page_title="CogniBurn", layout="centered")
 
