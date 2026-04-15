@@ -3,8 +3,8 @@ import numpy as np
 import joblib
 
 # Load model and scaler
-model = joblib.load("burnout_model.pkl")
-scaler = joblib.load("scaler.pkl")
+model = joblib.load("models/burnout_model.pkl")
+scaler = joblib.load("models/scaler.pkl")
 
 # -------------------------------
 # PAGE CONFIG
