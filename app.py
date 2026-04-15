@@ -6,12 +6,79 @@ import joblib
 model = joblib.load("burnout_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
 st.set_page_config(page_title="CogniBurn", layout="centered")
 
-st.title("🧠 CogniBurn: Burnout Detection System")
-st.write("Enter your lifestyle and behavioral data to predict burnout level.")
+# -------------------------------
+# CUSTOM CSS (UI MAGIC 🔥)
+# -------------------------------
+st.markdown("""
+<style>
+body {
+    background-color: #0f172a;
+    color: white;
+}
 
-# 🔁 Mapping functions
+.main {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+h1 {
+    text-align: center;
+    font-weight: 700;
+}
+
+.stButton>button {
+    background-color: #6366f1;
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+    font-size: 16px;
+}
+
+.stButton>button:hover {
+    background-color: #4f46e5;
+}
+
+.result-box {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.low {
+    background-color: #16a34a;
+}
+
+.medium {
+    background-color: #f59e0b;
+}
+
+.high {
+    background-color: #dc2626;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# HEADER
+# -------------------------------
+st.markdown("<h1>🧠 CogniBurn</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>AI-Based Burnout Detection System</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+# -------------------------------
+# MAPPING FUNCTIONS
+# -------------------------------
 level_map = {
     "Very Low": 0.0,
     "Low": 0.25,
@@ -28,29 +95,57 @@ quality_map = {
     "Excellent": 1.0
 }
 
-# 🧾 INPUTS (REAL WORLD)
+# -------------------------------
+# INPUT SECTION
+# -------------------------------
+st.subheader("📊 Lifestyle Inputs")
 
-study_time = st.number_input("Study Time (hours/day)", 0.0, 12.0, 4.0)
-social_media_usage = st.number_input("Social Media Usage (hours/day)", 0.0, 10.0, 2.0)
-sleep_hours = st.number_input("Sleep Hours (per day)", 0.0, 12.0, 7.0)
-physical_activity = st.number_input("Physical Activity (hours/week)", 0.0, 20.0, 3.0)
+col1, col2 = st.columns(2)
 
-sleep_quality = st.selectbox("Sleep Quality", list(quality_map.keys()))
-headache_freq = st.selectbox("Headache Frequency", list(quality_map.keys()))
+with col1:
+    study_time = st.number_input("Study Time (hrs/day)", 0.0, 12.0, 4.0)
+    sleep_hours = st.number_input("Sleep Hours", 0.0, 12.0, 7.0)
+    physical_activity = st.number_input("Physical Activity (hrs/week)", 0.0, 20.0, 3.0)
 
-study_load = st.selectbox("Study Load", list(level_map.keys()))
-exam_anxiety = st.selectbox("Exam Anxiety", list(level_map.keys()))
-stress_level = st.selectbox("Stress Level", list(level_map.keys()))
-mental_strain = st.selectbox("Mental Strain", list(level_map.keys()))
-recovery_score = st.selectbox("Recovery Score", list(level_map.keys()))
-performance_pressure = st.selectbox("Performance Pressure", list(level_map.keys()))
-lifestyle_stress = st.selectbox("Lifestyle Stress", list(level_map.keys()))
+with col2:
+    social_media_usage = st.number_input("Social Media (hrs/day)", 0.0, 10.0, 2.0)
+    screen_time = social_media_usage
 
-screen_time = social_media_usage  # optional approximation
-extracurricular_freq = 0.5  # default (can improve later)
+# -------------------------------
+# QUALITY INPUTS
+# -------------------------------
+st.subheader("😴 Health & Quality")
 
-# 🔄 NORMALIZATION (MATCH TRAINING DATA)
+col1, col2 = st.columns(2)
 
+with col1:
+    sleep_quality = st.selectbox("Sleep Quality", list(quality_map.keys()))
+    headache_freq = st.selectbox("Headache Frequency", list(quality_map.keys()))
+
+with col2:
+    study_load = st.selectbox("Study Load", list(level_map.keys()))
+    extracurricular_freq = 0.5  # default
+
+# -------------------------------
+# MENTAL STATE
+# -------------------------------
+st.subheader("🧠 Mental & Behavioral State")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    stress_level = st.selectbox("Stress Level", list(level_map.keys()))
+    exam_anxiety = st.selectbox("Exam Anxiety", list(level_map.keys()))
+    recovery_score = st.selectbox("Recovery Score", list(level_map.keys()))
+
+with col2:
+    mental_strain = st.selectbox("Mental Strain", list(level_map.keys()))
+    performance_pressure = st.selectbox("Performance Pressure", list(level_map.keys()))
+    lifestyle_stress = st.selectbox("Lifestyle Stress", list(level_map.keys()))
+
+# -------------------------------
+# NORMALIZATION
+# -------------------------------
 study_time = study_time / 12
 social_media_usage = social_media_usage / 10
 sleep_hours = sleep_hours / 12
@@ -67,8 +162,10 @@ recovery_score = level_map[recovery_score]
 performance_pressure = level_map[performance_pressure]
 lifestyle_stress = level_map[lifestyle_stress]
 
-# 🚀 PREDICTION
-if st.button("Predict Burnout Level"):
+# -------------------------------
+# PREDICTION
+# -------------------------------
+if st.button("🔍 Predict Burnout Level"):
 
     input_data = np.array([[study_time, social_media_usage, sleep_quality,
                             headache_freq, study_load, extracurricular_freq,
@@ -83,14 +180,30 @@ if st.button("Predict Burnout Level"):
     levels = {0: "Low", 1: "Medium", 2: "High"}
     result = levels[prediction]
 
-    st.subheader(f"🔥 Burnout Level: {result}")
+    # -------------------------------
+    # RESULT DISPLAY
+    # -------------------------------
+    if result == "Low":
+        st.markdown("<div class='result-box low'>✅ Low Burnout</div>", unsafe_allow_html=True)
+    elif result == "Medium":
+        st.markdown("<div class='result-box medium'>⚠️ Medium Burnout</div>", unsafe_allow_html=True)
+    else:
+        st.markdown("<div class='result-box high'>🔥 High Burnout</div>", unsafe_allow_html=True)
 
-    # 💡 Recommendations
-    st.write("### 💡 Recommendations:")
+    # -------------------------------
+    # RECOMMENDATIONS
+    # -------------------------------
+    st.markdown("### 💡 Recommendations")
 
     if result == "High":
-        st.error("⚠️ High burnout detected! Reduce workload, improve sleep, and take breaks.")
+        st.error("Reduce workload, improve sleep, and take regular breaks.")
     elif result == "Medium":
-        st.warning("⚠️ Moderate burnout. Maintain balance and monitor stress.")
+        st.warning("Maintain balance and monitor stress.")
     else:
-        st.success("✅ Low burnout. Keep up the healthy routine!")
+        st.success("Keep up your healthy routine!")
+
+# -------------------------------
+# FOOTER
+# -------------------------------
+st.markdown("---")
+st.markdown("<p style='text-align:center;'>Built with ❤️ using Machine Learning</p>", unsafe_allow_html=True)
