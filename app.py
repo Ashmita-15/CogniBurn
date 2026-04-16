@@ -1007,7 +1007,7 @@ elif page == "Model Insights":
         textfont=dict(family="JetBrains Mono", size=9, color="#7c8099"),
         hovertemplate="<b>%{y}</b><br>Importance: %{x:.4f}<extra></extra>"
     ))
-    fig = plot_cfg(fig, 520, "", showlegend=False)
+    fig = plot_cfg(fig, 520, "Feature Importance", showlegend=False)
     fig.update_layout(xaxis_title="Mean |Coefficient|", yaxis_title="",
                       yaxis=dict(tickfont=dict(family="DM Sans", size=11, color="#e8eaf0")))
     st.plotly_chart(fig, use_container_width=True)
