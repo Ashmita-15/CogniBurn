@@ -78,10 +78,10 @@ st.markdown("""
 /* ── TYPOGRAPHY ── */
 h1 {
     font-family: var(--font-head) !important;
-    font-size: 2.6rem !important;
-    font-weight: 800 !important;
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
     color: var(--text) !important;
-    letter-spacing: -0.03em !important;
+    letter-spacing: -0.02em !important;
     line-height: 1.1 !important;
     margin-bottom: 0.25rem !important;
 }
@@ -1101,7 +1101,7 @@ elif page == "Model Insights":
 elif page == "Risk Predictor":
 
     page_header("05 / PREDICT", "Burnout Risk Predictor",
-                "Enter your details to estimate burnout risk.")
+                "A quick check on how your lifestyle impacts burnout risk.")
 
     if model is None or scaler is None:
         st.error("Model not loaded.")
